@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/error.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <h1>Sorry, the page you are looking for cannot be found.</h1>
+      <h2>Error: <%= error %></h2>
+      <a href="/">Return to homepage.</a>
+    </main>
+  </body>
+</html>

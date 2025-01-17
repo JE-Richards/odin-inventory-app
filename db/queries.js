@@ -57,7 +57,7 @@ async function getIndividualBook(id) {
   `;
 
   const { rows } = await pool.query(SQL, [id]);
-  return rows;
+  return rows[0] || null;
 }
 
 async function getIndividualAuthor(id) {
@@ -73,7 +73,7 @@ async function getIndividualAuthor(id) {
   `;
 
   const { rows } = await pool.query(SQL, [id]);
-  return rows;
+  return rows[0] || null;
 }
 
 async function getBooksByAuthor(authorId) {
@@ -110,7 +110,7 @@ async function getIndividualGenre(id) {
   `;
 
   const { rows } = await pool.query(SQL, [id]);
-  return rows;
+  return rows[0] || null;
 }
 
 async function getBooksByGenre(genreId) {
@@ -147,7 +147,7 @@ async function getIndividualPublisher(id) {
   `;
 
   const { rows } = await pool.query(SQL, [id]);
-  return rows;
+  return rows[0] || null;
 }
 
 async function getBooksByPublisher(publisherId) {

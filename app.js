@@ -19,6 +19,12 @@ app.use('/genres', genresRouter());
 app.use('/books', booksRouter());
 app.use('/authors', authorRouter());
 app.use('/', indexRouter());
+app.use((err, req, res, next) => {
+  console.error(err);
+  res
+    .status(err.statusCode || 500)
+    .render('error', { title: 'Error', error: err.message });
+});
 
 app.listen(process.env.PORT, () => {
   console.log(

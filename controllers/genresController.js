@@ -1,4 +1,6 @@
 const db = require('../db/queries');
+const asyncHandler = require('express-async-handler');
+const CustomNotFoundError = require('../errors/CustomNotFoundError');
 
 const getGenres = async (req, res) => {
   const genres = await db.getAllGenres();
@@ -6,14 +8,21 @@ const getGenres = async (req, res) => {
   res.render('genres', { title: 'Genres', genres: genres });
 };
 
-const getIndividualGenre = async (req, res) => {
+const getIndividualGenre = asyncHandler(async (req, res, next) => {
   const genreId = parseInt(req.params.id);
   const genre = await db.getIndividualGenre(genreId);
-  const genreName = genre[0].genreName;
+
+  if (!genre) {
+    throw new CustomNotFoundError('Genre not found');
+  }
+
   const booksByGenre = await db.getBooksByGenre(genreId);
 
-  res.render('individualGenre', { title: genreName, books: booksByGenre });
-};
+  res.render('individualGenre', {
+    title: genre.genreName,
+    books: booksByGenre,
+  });
+});
 
 module.exports = {
   getGenres,
