@@ -130,7 +130,7 @@ async function insertData(client, data) {
         book.authorLastName,
         book.genre,
         book.description,
-        book.coverImageURL,
+        book.coverImgURL,
         book.publisher,
       ]);
     } catch (error) {
