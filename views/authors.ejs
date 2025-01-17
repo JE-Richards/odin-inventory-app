@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/authors.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <ul>
+        <% authors.forEach((author) => {%>
+        <li>
+          <a href="/authors/<%= author.id %>"
+            ><%= author.first_name %> <%= author.last_name %></a
+          >
+        </li>
+        <% }); %>
+      </ul>
+      <a href="/">Return to homepage.</a>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/publishers.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <ul>
+        <% publishers.forEach((publisher) => {%>
+        <li>
+          <a href="/publishers/<%= publisher.id %>"
+            ><%= publisher.publisher %></a
+          >
+        </li>
+        <% }); %>
+      </ul>
+      <a href="/">Return to homepage.</a>
+    </main>
+  </body>
+</html>

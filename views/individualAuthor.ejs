@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/individualAuthor.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <section class="author-info">
+        <h1><%= author.authorName %></h1>
+        <% if (!author.bio) { %>
+        <p>Author bio not available.</p>
+        <% } else { %>
+        <p><%= author.bio %></p>
+        <%}%>
+      </section>
+      <section class="author-books">
+        <% books.forEach((book) => {%> <%- include('./components/bookCard', {
+        book }); %> <% }); %>
+      </section>
+      <a href="/">Return to homepage</a>
+    </main>
+  </body>
+</html>

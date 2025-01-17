@@ -1,0 +1,11 @@
+ul {
+  margin-bottom: 1em;
+}
+
+li {
+  list-style-position: inside;
+}
+
+li + li {
+  margin-top: 1em;
+}

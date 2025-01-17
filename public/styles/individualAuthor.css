@@ -1,0 +1,21 @@
+.author-books {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.bookCard {
+  border: 2px solid black;
+  padding: 0.5em;
+}
+
+.bookCard p {
+  max-width: 45ch;
+  margin-bottom: 0.125em;
+}
+
+.author-info h1,
+.author-info p {
+  margin-bottom: 1rem;
+}

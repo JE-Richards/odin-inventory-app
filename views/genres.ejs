@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/genres.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <ul>
+        <% genres.forEach((genre) => {%>
+        <li>
+          <a href="/genres/<%= genre.id %>"><%= genre.genre %></a>
+        </li>
+        <% }); %>
+      </ul>
+      <a href="/">Return to homepage.</a>
+    </main>
+  </body>
+</html>

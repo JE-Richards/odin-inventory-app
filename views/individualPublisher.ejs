@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/individualPublisher.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <section class="publisher-info">
+        <h1><%= title %></h1>
+      </section>
+      <section class="publisher-books">
+        <% books.forEach((book) => {%> <%- include('./components/bookCard', {
+        book }); %> <% }); %>
+      </section>
+      <a href="/">Return to homepage</a>
+    </main>
+  </body>
+</html>

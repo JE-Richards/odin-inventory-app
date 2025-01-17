@@ -1,0 +1,9 @@
+h1,
+h2,
+img {
+  margin-bottom: 0.5rem;
+}
+
+img {
+  max-height: 400px;
+}
