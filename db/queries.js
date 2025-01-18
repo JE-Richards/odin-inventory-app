@@ -46,7 +46,8 @@ async function getIndividualBook(id) {
       CONCAT(authors.first_name, ' ', authors.last_name) AS "bookAuthor",
       genres.genre AS "bookGenre",
       books.cover_img_url AS "bookImg",
-      publishers.publisher AS "bookPublisher"
+      publishers.publisher AS "bookPublisher",
+      description as "bookDescription"
     FROM
       books as books
       LEFT JOIN authors AS authors ON books.author_id = authors.id
@@ -172,6 +173,132 @@ async function getBooksByPublisher(publisherId) {
   return rows;
 }
 
+async function insertNewBook(bookData) {
+  const {
+    bookTitle,
+    authorFirstName,
+    authorLastName,
+    bookGenre,
+    bookDescription,
+    bookCoverImgURL,
+    bookPublisher,
+  } = bookData;
+
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Check if author already exists, if not insert them
+    const insertAuthorSQL = `
+    INSERT INTO authors (first_name, last_name)
+    VALUES ($1, $2)
+    ON CONFLICT (first_name, last_name) DO NOTHING
+    RETURNING id;
+  `;
+
+    const authorResult = await client.query(insertAuthorSQL, [
+      authorFirstName,
+      authorLastName,
+    ]);
+    const authorId =
+      authorResult.rows[0]?.id ||
+      (
+        await client.query(
+          `SELECT id
+        FROM authors
+        WHERE first_name = $1 AND last_name = $2
+        `,
+          [authorFirstName, authorLastName]
+        )
+      ).rows[0].id;
+
+    // Check if genre already exists, if not insert it
+    const insertGenreSQL = `
+    INSERT INTO genres (genre)
+    VALUES ($1)
+    ON CONFLICT (genre) DO NOTHING
+    RETURNING id;
+  `;
+
+    const genreResult = await client.query(insertGenreSQL, [bookGenre]);
+    const genreId =
+      genreResult.rows[0]?.id ||
+      (
+        await client.query(
+          `SELECT id 
+    FROM genres
+    WHERE genre = $1
+    `,
+          [bookGenre]
+        )
+      ).rows[0].id;
+
+    // Check if publisher exists, if not insert them
+    const insertPublisherSQL = `
+    INSERT INTO publishers (publisher)
+    VALUES ($1)
+    ON CONFLICT (publisher) DO NOTHING
+    RETURNING id;
+  `;
+    const publisherResult = await client.query(insertPublisherSQL, [
+      bookPublisher,
+    ]);
+    const publisherId =
+      publisherResult.rows[0]?.id ||
+      (
+        await client.query(
+          `SELECT id
+      FROM publishers
+      WHERE publisher = $1`,
+          [bookPublisher]
+        )
+      ).rows[0].id;
+
+    // check if book already exists
+    const doesBookExistSQL = `
+    SELECT id 
+    FROM books
+    WHERE title = ($1) AND author_id = ($2)
+  `;
+    const bookExistsResult = await client.query(doesBookExistSQL, [
+      bookTitle,
+      authorId,
+    ]);
+
+    if (bookExistsResult.rowCount > 0) {
+      throw new Error('Book already exists in the database');
+    }
+
+    // Insert the book if it doesn't exist
+    const insertBookSQL = `
+    INSERT INTO books (title, description, cover_img_url, author_id, genre_id, publisher_id)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING id;
+  `;
+
+    const bookInsertResult = await client.query(insertBookSQL, [
+      bookTitle,
+      bookDescription,
+      bookCoverImgURL,
+      authorId,
+      genreId,
+      publisherId,
+    ]);
+
+    await client.query('COMMIT');
+
+    return bookInsertResult.rows[0].id; // id of newly inserted row if successful
+  } catch (err) {
+    // Rollback the transactions if error occurs
+    await client.query('ROLLBACK');
+    console.error('Error during database operation:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getAllAuthors,
   getAllGenres,
@@ -184,4 +311,5 @@ module.exports = {
   getBooksByGenre,
   getIndividualPublisher,
   getBooksByPublisher,
+  insertNewBook,
 };

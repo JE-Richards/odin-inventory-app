@@ -1,0 +1,99 @@
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/global.css" />
+    <link rel="stylesheet" href="/styles/createNewBook.css" />
+  </head>
+  <body>
+    <%- include('./components/header') %>
+    <main>
+      <h1>Add a new book</h1>
+      <% if (errors.length !== 0) {%>
+      <div class="formErrors">
+        <h2>Issues with form submission:</h2>
+        <ul>
+          <% errors.forEach(function(error) { %>
+          <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+      <% } %>
+      <form action="/books/new" method="POST">
+        <label for="bookTitle">Book title (required): </label>
+        <input
+          type="text"
+          name="bookTitle"
+          id="bookTitle"
+          maxlength="255"
+          placeholder="A Game of Thrones"
+          value="<%= formData ? formData.bookTitle : '' %>"
+          required
+        />
+
+        <label for="authorFirstName">Author first name (required): </label>
+        <input
+          type="text"
+          name="authorFirstName"
+          id="authorFirstName"
+          maxlength="255"
+          placeholder="George R.R."
+          value="<%= formData ? formData.authorFirstName : '' %>"
+          required
+        />
+
+        <label for="authorLastName">Author last name (required): </label>
+        <input
+          type="text"
+          name="authorLastName"
+          id="authorLastName"
+          maxlength="255"
+          placeholder="Martin"
+          value="<%= formData ? formData.authorLastName : '' %>"
+          required
+        />
+
+        <label for="bookGenre">Genre (required): </label>
+        <input
+          type="text"
+          name="bookGenre"
+          id="bookGenre"
+          maxlength="255"
+          value="<%= formData ? formData.bookGenre : '' %>"
+          required
+        />
+
+        <label for="bookDescription">Brief description: </label>
+        <input
+          type="text"
+          name="bookDescription"
+          id="bookDescription"
+          maxlength="3000"
+          placeholder="A brief description (less than 3000 characters) of the book."
+          value="<%= formData ? formData.bookDescription : '' %>"
+        />
+
+        <label for="bookCoverImgURL">Cover image URL: </label>
+        <input
+          type="url"
+          name="bookCoverImgURL"
+          id="bookCoverImgURL"
+          maxlength="2048"
+          placeholder="https://example.com/cover.jpg"
+          value="<%= formData ? formData.bookCoverImgURL : '' %>"
+        />
+
+        <label for="bookPublisher">Publisher: </label>
+        <input
+          type="text"
+          name="bookPublisher"
+          id="bookPublisher"
+          maxlength="255"
+          placeholder="HarperCollins"
+          value="<%= formData ? formData.bookPublisher : '' %>"
+        />
+
+        <button type="submit">Submit</button>
+      </form>
+    </main>
+  </body>
+</html>
