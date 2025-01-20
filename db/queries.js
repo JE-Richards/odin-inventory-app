@@ -299,6 +299,109 @@ async function insertNewBook(bookData) {
   }
 }
 
+async function deleteBook(bookId) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // fetch book details for author, genre, and publisher
+    const { rows: bookDetails } = await client.query(
+      `
+      SELECT author_id, genre_id, publisher_id
+      FROM books
+      WHERE id = ($1);
+      `,
+      [bookId]
+    );
+
+    if (bookDetails.length === 0) {
+      throw new Error('Book not found');
+    }
+
+    // destructure + rename
+    const {
+      author_id: authorId,
+      genre_id: genreId,
+      publisher_id: publisherId,
+    } = bookDetails[0];
+
+    // Delete the book
+    await client.query(
+      `
+      DELETE FROM books WHERE id = ($1);
+      `,
+      [bookId]
+    );
+
+    // Check and delete author if no other books exist
+    const { rows: authorBooks } = await client.query(
+      `
+      SELECT COUNT(*) AS count
+      FROM books
+      WHERE author_id = ($1);
+      `,
+      [authorId]
+    );
+
+    if (parseInt(authorBooks[0].count, 10) === 0) {
+      await client.query(
+        `
+        DELETE FROM authors WHERE id = ($1);
+        `,
+        [authorId]
+      );
+    }
+
+    // Check and delete genre if no other books exist
+    const { rows: genreBooks } = await client.query(
+      `
+      SELECT COUNT(*) AS count
+      FROM books
+      WHERE genre_id = ($1);
+      `,
+      [genreId]
+    );
+
+    if (parseInt(genreBooks[0].count, 10) === 0) {
+      await client.query(
+        `
+        DELETE FROM genres WHERE id = ($1);
+        `,
+        [genreId]
+      );
+    }
+
+    // Check and delete publisher if no other books exist
+    const { rows: publisherBooks } = await client.query(
+      `
+      SELECT COUNT(*) AS count
+      FROM books
+      WHERE publisher_id = ($1);
+      `,
+      [genreId]
+    );
+
+    if (parseInt(publisherBooks[0].count, 10) === 0) {
+      await client.query(
+        `
+        DELETE FROM publishers WHERE id = ($1);
+        `,
+        [publisherId]
+      );
+    }
+
+    // commit transaction
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error during database operation:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getAllAuthors,
   getAllGenres,
@@ -312,4 +415,5 @@ module.exports = {
   getIndividualPublisher,
   getBooksByPublisher,
   insertNewBook,
+  deleteBook,
 };

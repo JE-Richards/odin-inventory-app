@@ -41,8 +41,17 @@ const postNewBook = [
   }),
 ];
 
+const deleteBook = asyncHandler(async (req, res, next) => {
+  const bookId = req.params.id;
+
+  await db.deleteBook(bookId);
+
+  res.redirect('/');
+});
+
 module.exports = {
   getIndividualBook,
   getNewBookForm,
   postNewBook,
+  deleteBook,
 };

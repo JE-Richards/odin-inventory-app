@@ -13,6 +13,13 @@
       <p><span class="bold">Genre:</span> <%= book.bookGenre %></p>
       <p><span class="bold">Publisher:</span> <%= book.bookPublisher %></p>
       <p><span class="bold">Description:</span> <%= book.bookDescription %></p>
+      <form
+        action="/books/<%= book.bookId %>/delete"
+        method="post"
+        onsubmit="return confirm('Are you sure you want to delete this book?');"
+      >
+        <button type="submit">Delete book</button>
+      </form>
       <a href="/">Return to homepage</a>
     </main>
   </body>
