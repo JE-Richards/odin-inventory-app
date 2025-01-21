@@ -1,4 +1,4 @@
-const db = require('../db/queries');
+const db = require('../db/queries/queries');
 
 const getIndex = async (req, res) => {
   const books = await db.getAllBooks();
