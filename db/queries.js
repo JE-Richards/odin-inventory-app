@@ -44,6 +44,8 @@ async function getIndividualBook(id) {
       books.id AS "bookId",
       books.title AS "bookTitle",
       CONCAT(authors.first_name, ' ', authors.last_name) AS "bookAuthor",
+      authors.first_name as "authorFirstName",
+      authors.last_name as "authorLastName",
       genres.genre AS "bookGenre",
       books.cover_img_url AS "bookImg",
       publishers.publisher AS "bookPublisher",
@@ -402,6 +404,232 @@ async function deleteBook(bookId) {
   }
 }
 
+async function editBook(bookId, editedBookData) {
+  const {
+    bookTitle: editedBookTitle,
+    authorFirstName: editedAuthorFirstName,
+    authorLastName: editedAuthorLastName,
+    bookGenre: editedBookGenre,
+    bookDescription: editedBookDescription,
+    bookCoverImgURL: editedBookCoverImgURL,
+    bookPublisher: editedBookPublisher,
+  } = editedBookData;
+
+  const client = await pool.connect();
+
+  try {
+    client.query('BEGIN');
+
+    // fetch current details for author, genre, publisher
+    const { rows: currentDetails } = await client.query(
+      `
+      SELECT author_id, genre_id, publisher_id
+      FROM books
+      WHERE id = ($1);
+      `,
+      [bookId]
+    );
+
+    if (currentDetails.length === 0) {
+      throw new Error('Book not found');
+    }
+
+    // destructure + rename
+    const {
+      author_id: currentAuthorId,
+      genre_id: currentGenreId,
+      publisher_id: currentPublisherId,
+    } = currentDetails[0];
+
+    // get current author details for comparison
+    let newAuthorId = currentAuthorId;
+
+    const { rows: currentAuthorDetails } = await client.query(
+      `
+      SELECT first_name, last_name
+      FROM authors
+      WHERE id = ($1)
+      `,
+      [currentAuthorId]
+    );
+
+    const {
+      first_name: currentAuthorFirstName,
+      last_name: currentAuthorLastName,
+    } = currentAuthorDetails[0];
+
+    // compare edited author details against current
+    if (
+      editedAuthorFirstName !== currentAuthorFirstName ||
+      editedAuthorLastName !== currentAuthorLastName
+    ) {
+      // if details are different, need to check if currentAuthor has other book
+      const { rows: authorBooks } = await client.query(
+        `
+        SELECT id
+        FROM books
+        WHERE author_id = ($1) AND id != ($2)
+        `,
+        [currentAuthorId, bookId]
+      );
+      // if currentAuthor has more books, create new author
+      // if not, update currentAuthor
+      if (authorBooks.length > 0) {
+        const { rows: newAuthor } = await client.query(
+          `
+          INSERT INTO authors (first_name, last_name)
+          VALUES ($1, $2)
+          RETURNING id;
+          `,
+          [editedAuthorFirstName, editedAuthorLastName]
+        );
+        newAuthorId = newAuthor[0].id;
+      } else {
+        await client.query(
+          `
+          UPDATE authors
+          SET
+            first_name = ($1),
+            last_name = ($2)
+          WHERE id = ($3);
+          `,
+          [editedAuthorFirstName, editedAuthorLastName, currentAuthorId]
+        );
+      }
+    }
+
+    // get current genre details for comparison
+    let newGenreId = currentGenreId;
+
+    const { rows: currentGenreDetails } = await client.query(
+      `
+      SELECT genre
+      FROM genres
+      WHERE id = ($1)
+      `,
+      [currentGenreId]
+    );
+
+    const { genre: currentGenre } = currentGenreDetails[0];
+
+    // compare edited genre against current
+    if (editedBookGenre !== currentGenre) {
+      // if details are different, need to check if genre has other books
+      const { rows: genreBooks } = await client.query(
+        `
+        SELECT id
+        FROM books
+        WHERE genre_id = ($1) AND id != ($2)
+        `,
+        [currentGenreId, bookId]
+      );
+      // If currentGenre has more books, create new genre
+      // if not, update currentGenre
+      if (genreBooks.length > 0) {
+        const { rows: newGenre } = await client.query(
+          `
+          INSERT INTO genres (genre)
+          VALUES ($1)
+          RETURNING id;
+          `,
+          [editedBookGenre]
+        );
+        newGenreId = newGenre[0].id;
+      } else {
+        await client.query(
+          `
+          UPDATE genres
+          SET genre = ($1)
+          WHERE id = ($2);
+          `,
+          [editedBookGenre, currentGenreId]
+        );
+      }
+    }
+
+    // get current publisher details for comparison
+    let newPublisherId = currentPublisherId;
+
+    const { rows: currentPublisherDetails } = await client.query(
+      `
+      SELECT publisher
+      FROM publishers
+      WHERE id = ($1)
+      `,
+      [currentPublisherId]
+    );
+
+    const { publisher: currentPublisher } = currentPublisherDetails[0];
+
+    // compare edited publisher details against current
+    if (editedBookPublisher !== currentPublisher) {
+      // if details are different, need to check if currentPublisher has other books
+      const { rows: publisherBooks } = await client.query(
+        `
+        SELECT id
+        FROM books
+        WHERE publisher_id = ($1) AND id != ($2);
+        `,
+        [currentPublisherId, bookId]
+      );
+      // if currentPublisher has more books, create new publisher
+      // if not, update currentPublisher
+      if (publisherBooks.length > 0) {
+        const { rows: newPublisher } = await client.query(
+          `
+          INSERT INTO publishers (publisher)
+          VALUES ($1)
+          RETURNING id;
+          `,
+          [editedBookPublisher]
+        );
+        newPublisherId = newPublisher[0].id;
+      } else {
+        await client.query(
+          `
+          UPDATE publishers
+          SET publisher = ($1)
+          WHERE id = ($2);
+          `,
+          [editedBookPublisher, currentPublisherId]
+        );
+      }
+    }
+
+    // Update book details
+    await client.query(
+      `
+      UPDATE books
+      SET
+        title = ($1),
+        author_id = ($2),
+        genre_id = ($3),
+        description = ($4),
+        cover_img_url = ($5),
+        publisher_id = ($6)
+      WHERE id = ($7)
+      `,
+      [
+        editedBookTitle,
+        newAuthorId,
+        newGenreId,
+        editedBookDescription,
+        editedBookCoverImgURL,
+        newPublisherId,
+        bookId,
+      ]
+    );
+
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error during database operation:', err);
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   getAllAuthors,
   getAllGenres,
@@ -416,4 +644,5 @@ module.exports = {
   getBooksByPublisher,
   insertNewBook,
   deleteBook,
+  editBook,
 };

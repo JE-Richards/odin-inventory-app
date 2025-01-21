@@ -9,6 +9,12 @@ const individualBookRouter = () => {
   router.post('/:id/delete', (req, res, next) =>
     booksController.deleteBook(req, res, next)
   );
+  router.get('/:id/edit', (req, res, next) => {
+    booksController.getEditBookForm(req, res, next);
+  });
+  router.post('/:id/edit', (req, res, next) => {
+    booksController.postEditBook(req, res, next);
+  });
   router.get('/:id', (req, res, next) =>
     booksController.getIndividualBook(req, res, next)
   );
